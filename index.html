@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capture The Flag</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#1a1a2e;font-family:'Barlow',sans-serif;overflow:hidden;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;}
+  canvas{display:none;border:3px solid #fff2;box-shadow:0 0 60px #0008;}
+  .screen{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:all;}
+  .screen.hidden{display:none;}
+  #menuScreen{background:radial-gradient(ellipse at 50% 30%,#1a3a1a 0%,#0a1a0a 60%,#050d05 100%);}
+  #menuScreen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,#ffffff06 40px,#ffffff06 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#ffffff06 40px,#ffffff06 41px);}
+  .game-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,96px);color:#fff;letter-spacing:6px;text-shadow:0 0 40px #4caf5088,0 4px 0 #000;position:relative;z-index:1;}
+  .game-subtitle{font-size:14px;letter-spacing:8px;color:#4caf50;text-transform:uppercase;margin-bottom:36px;position:relative;z-index:1;}
+  .menu-btn{background:linear-gradient(135deg,#2d5a2d,#4caf50);border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;padding:14px 60px;border-radius:4px;cursor:pointer;position:relative;z-index:1;transition:all .2s;box-shadow:0 4px 20px #4caf5044;}
+  .menu-btn:hover{transform:scale(1.05);box-shadow:0 6px 30px #4caf5077;}
+  .rules-box{background:#ffffff0d;border:1px solid #ffffff18;border-radius:8px;padding:18px 28px;max-width:540px;width:90%;margin-top:24px;position:relative;z-index:1;}
+  .rules-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#4caf50;margin-bottom:10px;}
+  .rules-box ul{list-style:none;color:#ccc;font-size:12.5px;line-height:1.85;}
+  .rules-box ul li::before{content:'▸ ';color:#4caf50;}
+  #modeScreen{background:radial-gradient(ellipse at 50% 30%,#1a3a1a 0%,#050d05 100%);}
+  .screen-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:4px;color:#fff;margin-bottom:30px;}
+  .mode-btns{display:flex;gap:20px;}
+  .mode-btn{background:#ffffff0d;border:2px solid #4caf5066;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;padding:20px 44px;border-radius:6px;cursor:pointer;transition:all .2s;}
+  .mode-btn:hover{background:#4caf5022;border-color:#4caf50;transform:translateY(-3px);}
+  .back-btn{margin-top:14px;background:none;border:1px solid #ffffff33;color:#aaa;font-family:'Barlow',sans-serif;font-size:14px;padding:8px 24px;border-radius:4px;cursor:pointer;transition:all .2s;}
+  .back-btn:hover{color:#fff;border-color:#fff;}
+  #teamScreen{background:radial-gradient(ellipse at 50% 30%,#1a3a1a 0%,#050d05 100%);}
+  .team-select-wrap{display:flex;gap:40px;align-items:flex-start;margin-bottom:24px;}
+  .team-select-panel{display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .panel-label{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:#aaa;}
+  .team-carousel{display:flex;align-items:center;gap:16px;}
+  .carousel-btn{background:none;border:2px solid #ffffff44;color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+  .carousel-btn:hover{border-color:#fff;background:#ffffff18;}
+  .team-preview{width:90px;height:90px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:3px solid #ffffff33;}
+  .team-name-lbl{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#fff;margin-top:5px;}
+  #diffScreen{background:radial-gradient(ellipse at 50% 30%,#1a3a1a 0%,#050d05 100%);}
+  .option-row{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:16px;}
+  .option-label{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:3px;color:#4caf50;}
+  .option-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .opt-btn{background:#ffffff0d;border:2px solid #ffffff22;color:#ccc;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border-radius:4px;cursor:pointer;transition:all .2s;}
+  .opt-btn:hover,.opt-btn.selected{background:#4caf5022;border-color:#4caf50;color:#fff;}
+  .start-btn{background:linear-gradient(135deg,#2d5a2d,#4caf50);border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;padding:13px 56px;border-radius:4px;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px #4caf5044;margin-top:8px;}
+  .start-btn:hover{transform:scale(1.05);}
+  #pauseScreen{background:#00000088;backdrop-filter:blur(6px);}
+  .pause-box{background:#0d1117ee;border:1px solid #ffffff22;border-radius:12px;padding:40px 60px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .pause-title{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:#fff;}
+  .pause-btn{background:#ffffff0d;border:2px solid #ffffff33;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;padding:12px 44px;border-radius:4px;cursor:pointer;transition:all .2s;width:220px;text-align:center;}
+  .pause-btn:hover{background:#4caf5022;border-color:#4caf50;}
+  #hud{position:fixed;top:0;left:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;pointer-events:none;z-index:10;}
+  #scoreDisplay{font-family:'Bebas Neue',sans-serif;font-size:34px;color:#fff;text-shadow:0 2px 8px #000;letter-spacing:4px;}
+  #pauseHudBtn{pointer-events:all;background:#ffffff18;border:1px solid #ffffff33;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;padding:6px 16px;border-radius:4px;cursor:pointer;transition:all .2s;}
+  #pauseHudBtn:hover{background:#ffffff33;}
+  #roundDisplay{font-family:'Bebas Neue',sans-serif;font-size:15px;color:#aaa;letter-spacing:3px;text-align:center;}
+  #flagCountDisplay{font-family:'Bebas Neue',sans-serif;font-size:12px;color:#4caf50;letter-spacing:2px;text-align:center;margin-top:2px;}
+  #countdownOverlay{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20;background:transparent;}
+  #countdownNum{font-family:'Bebas Neue',sans-serif;font-size:160px;color:#fff;text-shadow:0 0 60px #4caf50,0 4px 0 #000;opacity:0;}
+  #goalBanner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:#fff;text-shadow:0 0 40px #ffcc00,0 4px 0 #000;opacity:0;pointer-events:none;z-index:15;white-space:nowrap;}
+  #gameOverScreen{background:#00000099;backdrop-filter:blur(8px);}
+  .gameover-box{background:#0d1117ee;border:1px solid #ffffff22;border-radius:12px;padding:46px 66px;display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .gameover-title{font-family:'Bebas Neue',sans-serif;font-size:50px;letter-spacing:5px;color:#fff;}
+  .gameover-reason{font-family:'Barlow',sans-serif;font-size:14px;letter-spacing:2px;color:#888;text-transform:uppercase;}
+  .gameover-score{font-family:'Bebas Neue',sans-serif;font-size:36px;color:#aaa;letter-spacing:3px;}
+  .gameover-winner{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;}
+  #controlsHint{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;color:#ffffffcc;letter-spacing:2px;pointer-events:none;z-index:10;white-space:nowrap;text-shadow:0 1px 4px #000;}
+
+  /* Canvas flash overlay */
+  #switchFlash{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    pointer-events:none;z-index:18;opacity:0;
+    transition:opacity 0.08s ease;
+  }
+  #switchFlash.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- MAIN MENU -->
+<div class="screen" id="menuScreen">
+  <div class="game-title">CAPTURE THE FLAG</div>
+  <div class="game-subtitle">The Classic Field Game</div>
+  <button class="menu-btn" onclick="showScreen('modeScreen')">PLAY</button>
+  <div class="rules-box">
+    <div class="rules-title">RULES</div>
+    <ul>
+      <li>Run into the enemy flag to pick it up, then carry it back to your base to score</li>
+      <li>Once you cross the centre line, enemies can tag you</li>
+      <li>Tagged players are frozen — a teammate must touch them to unfreeze</li>
+      <li>If a flag carrier is tagged, the flag drops and waits for an attacker to retrieve it</li>
+      <li>Win a round by capturing ALL enemy flags OR freezing ALL enemy players</li>
+    </ul>
+  </div>
+  <div class="rules-box" style="margin-top:14px">
+    <div class="rules-title">CONTROLS</div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#4caf50;margin-bottom:6px;">1 PLAYER</div>
+        <ul>
+          <li><span style="color:#fff;font-weight:700;">WASD</span> — Move</li>
+          <li><span style="color:#fff;font-weight:700;">F</span> — Tag enemy / Unfreeze teammate</li>
+          <li><span style="color:#fff;font-weight:700;">C</span> — Switch player</li>
+          <li><span style="color:#fff;font-weight:700;">ESC</span> — Pause / Resume</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#4caf50;margin-bottom:6px;">2 PLAYERS — P2</div>
+        <ul>
+          <li><span style="color:#fff;font-weight:700;">IJKL</span> — Move</li>
+          <li><span style="color:#fff;font-weight:700;">;</span> — Tag enemy / Unfreeze teammate</li>
+          <li><span style="color:#fff;font-weight:700;">.</span> — Switch player</li>
+          <li><span style="color:#fff;font-weight:700;">ESC</span> — Pause / Resume</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE SELECT -->
+<div class="screen hidden" id="modeScreen">
+  <div class="screen-title">SELECT MODE</div>
+  <div class="mode-btns">
+    <button class="mode-btn" onclick="selectMode(1)">1 PLAYER</button>
+    <button class="mode-btn" onclick="selectMode(2)">2 PLAYERS</button>
+  </div>
+  <button class="back-btn" onclick="showScreen('menuScreen')">← BACK</button>
+</div>
+
+<!-- TEAM SELECT -->
+<div class="screen hidden" id="teamScreen">
+  <div class="screen-title" id="teamScreenTitle">CHOOSE YOUR TEAM</div>
+  <div class="team-select-wrap" id="teamSelectWrap"></div>
+  <button class="start-btn" onclick="showDiffScreen()">NEXT →</button>
+  <button class="back-btn" onclick="showScreen('modeScreen')">← BACK</button>
+</div>
+
+<!-- GAME SETTINGS -->
+<div class="screen hidden" id="diffScreen">
+  <div class="screen-title">GAME SETTINGS</div>
+  <div class="option-row">
+    <div class="option-label">DIFFICULTY</div>
+    <div class="option-btns">
+      <button class="opt-btn" data-group="diff" data-val="amateur" onclick="selectOpt(this)">AMATEUR</button>
+      <button class="opt-btn selected" data-group="diff" data-val="intermediate" onclick="selectOpt(this)">INTERMEDIATE</button>
+      <button class="opt-btn" data-group="diff" data-val="professional" onclick="selectOpt(this)">PROFESSIONAL</button>
+    </div>
+  </div>
+  <div class="option-row">
+    <div class="option-label">PLAYERS PER TEAM</div>
+    <div class="option-btns">
+      <button class="opt-btn selected" data-group="ppt" data-val="4" onclick="selectOpt(this)">4 PLAYERS</button>
+      <button class="opt-btn" data-group="ppt" data-val="6" onclick="selectOpt(this)">6 PLAYERS</button>
+      <button class="opt-btn" data-group="ppt" data-val="8" onclick="selectOpt(this)">8 PLAYERS</button>
+    </div>
+  </div>
+  <div class="option-row">
+    <div class="option-label">FLAGS PER TEAM</div>
+    <div class="option-btns">
+      <button class="opt-btn selected" data-group="flags" data-val="1" onclick="selectOpt(this)">1 FLAG</button>
+      <button class="opt-btn" data-group="flags" data-val="2" onclick="selectOpt(this)">2 FLAGS</button>
+      <button class="opt-btn" data-group="flags" data-val="3" onclick="selectOpt(this)">3 FLAGS</button>
+    </div>
+  </div>
+  <div class="option-row">
+    <div class="option-label">GAME MODE</div>
+    <div class="option-btns">
+      <button class="opt-btn selected" data-group="mode" data-val="1" onclick="selectOpt(this)">BEST OF 1</button>
+      <button class="opt-btn" data-group="mode" data-val="3" onclick="selectOpt(this)">BEST OF 3</button>
+      <button class="opt-btn" data-group="mode" data-val="5" onclick="selectOpt(this)">BEST OF 5</button>
+      <button class="opt-btn" data-group="mode" data-val="7" onclick="selectOpt(this)">BEST OF 7</button>
+    </div>
+  </div>
+  <button class="start-btn" onclick="startGame()">KICK OFF!</button>
+  <button class="back-btn" onclick="showScreen('teamScreen')">← BACK</button>
+</div>
+
+<!-- PAUSE -->
+<div class="screen hidden" id="pauseScreen">
+  <div class="pause-box">
+    <div class="pause-title">PAUSED</div>
+    <button class="pause-btn" onclick="resumeGame()">RESUME</button>
+    <button class="pause-btn" onclick="restartGame()">RESTART</button>
+    <button class="pause-btn" onclick="goHome()">HOME</button>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="screen hidden" id="gameOverScreen">
+  <div class="gameover-box">
+    <div class="gameover-title">FULL TIME</div>
+    <div class="gameover-reason" id="gameOverReason"></div>
+    <div class="gameover-winner" id="gameOverWinner"></div>
+    <div class="gameover-score" id="gameOverScore"></div>
+    <button class="start-btn" onclick="restartGame()">PLAY AGAIN</button>
+    <button class="back-btn" onclick="goHome()">HOME</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" style="display:none">
+  <div id="scoreDisplay">0 – 0</div>
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div id="roundDisplay"></div>
+    <div id="flagCountDisplay"></div>
+  </div>
+  <button id="pauseHudBtn" onclick="pauseGame()">⏸ PAUSE</button>
+</div>
+
+<!-- COUNTDOWN (transparent bg so field shows through) -->
+<div id="countdownOverlay" style="display:none">
+  <div id="countdownNum">3</div>
+</div>
+
+<!-- GOAL BANNER -->
+<div id="goalBanner"></div>
+
+<!-- CONTROLS -->
+<div id="controlsHint"></div>
+<div id="switchFlash"></div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+// =========================================================
+// DATA
+// =========================================================
+const TEAM_DEFS = [
+  {name:'Orange', shirt:'#e65100', shorts:'#bf360c', flag:'#ff6d00', light:'#ffab40'},
+  {name:'Blue',   shirt:'#1e88e5', shorts:'#1565c0', flag:'#40c4ff', light:'#82b1ff'},
+  {name:'Pink',   shirt:'#e91e8c', shorts:'#880e4f', flag:'#f48fb1', light:'#fce4ec'},
+  {name:'Green',  shirt:'#2e7d32', shorts:'#1b5e20', flag:'#69f0ae', light:'#b9f6ca'},
+];
+
+// =========================================================
+// CONSTANTS
+// =========================================================
+const FIELD_W = 900, FIELD_H = 560;
+const CENTRE_X = FIELD_W / 2;
+const BASE_W = 140;
+const PR = 14;
+const FLAG_R = 10;
+const BASE_SPEED = 2.2;
+const TAG_RANGE = PR * 2.5;
+const PICK_RANGE = PR * 2.2;
+
+// =========================================================
+// STATE
+// =========================================================
+let gameMode = 1;
+let team1Idx = 0, team2Idx = 1;
+let difficulty = 'intermediate';
+let targetWins = 1;
+let numFlags = 1;
+let playersPerTeam = 4;
+let score1 = 0, score2 = 0;
+let gameState = 'menu';
+let players = [], flags = [];
+let controlled1 = null, controlled2 = null;
+let paused = false, roundOver = false;
+let lastTime = 0, animId = null;
+let flashTimer = 0, flashOn = false;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const keys = {};
+
+document.addEventListener('keydown', e => {
+  // Escape toggles pause/resume regardless of gameState — and never minimises browser
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    if (gameState === 'playing' && !roundOver) { pauseGame(); return; }
+    if (gameState === 'paused')                { resumeGame(); return; }
+    return;
+  }
+  keys[e.key] = true;
+  keys[e.key.toLowerCase()] = true;
+  if (gameState === 'playing' && !roundOver) handleKeyDown(e);
+});
+document.addEventListener('keyup', e => {
+  keys[e.key] = false;
+  keys[e.key.toLowerCase()] = false;
+});
+
+// =========================================================
+// UI
+// =========================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function hideAllScreens() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+}
+
+// =========================================================
+// TEAM SELECT
+// =========================================================
+let teamPanels = [];
+
+function selectMode(n) {
+  gameMode = n;
+  buildTeamSelect();
+  showScreen('teamScreen');
+}
+
+function buildTeamSelect() {
+  const wrap = document.getElementById('teamSelectWrap');
+  wrap.innerHTML = '';
+  teamPanels = [];
+  document.getElementById('teamScreenTitle').textContent = 'CHOOSE YOUR TEAM';
+  if (gameMode === 1) {
+    addTeamPanel(wrap, 'YOUR TEAM  (A / D)', 0);
+    addTeamPanel(wrap, 'OPPONENT  (← / →)', 1);
+  } else {
+    addTeamPanel(wrap, 'PLAYER 1  (A / D)', 0);
+    addTeamPanel(wrap, 'PLAYER 2  (J / L)', 1);
+  }
+  teamPanels[0].idx = 0;
+  teamPanels[1].idx = 1;
+  renderTeamPanels();
+
+  // Keyboard carousel on team screen
+  document.onkeydown = e => {
+    if (document.getElementById('teamScreen').classList.contains('hidden')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'a')           { teamPanels[0].idx = (teamPanels[0].idx - 1 + 4) % 4; renderTeamPanels(); }
+    if (k === 'd')           { teamPanels[0].idx = (teamPanels[0].idx + 1) % 4;     renderTeamPanels(); }
+    if (k === 'j' || k === 'arrowleft')  { teamPanels[1].idx = (teamPanels[1].idx - 1 + 4) % 4; renderTeamPanels(); }
+    if (k === 'l' || k === 'arrowright') { teamPanels[1].idx = (teamPanels[1].idx + 1) % 4;     renderTeamPanels(); }
+  };
+}
+
+function addTeamPanel(wrap, label, pidx) {
+  teamPanels.push({ idx: pidx });
+  const div = document.createElement('div');
+  div.className = 'team-select-panel';
+  div.innerHTML = `
+    <div class="panel-label">${label}</div>
+    <div class="team-carousel">
+      <button class="carousel-btn" onclick="shiftTeam(${pidx},-1)">◀</button>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="team-preview" id="tp${pidx}"><span style="font-size:34px">🏃</span></div>
+        <div class="team-name-lbl" id="tn${pidx}">-</div>
+      </div>
+      <button class="carousel-btn" onclick="shiftTeam(${pidx},1)">▶</button>
+    </div>`;
+  wrap.appendChild(div);
+}
+
+function shiftTeam(i, d) {
+  teamPanels[i].idx = (teamPanels[i].idx + d + 4) % 4;
+  renderTeamPanels();
+}
+
+function renderTeamPanels() {
+  teamPanels.forEach((p, i) => {
+    const t = TEAM_DEFS[p.idx];
+    const el = document.getElementById('tp' + i);
+    const nl = document.getElementById('tn' + i);
+    if (el) { el.style.background = t.shirt + '33'; el.style.borderColor = t.shirt; }
+    if (nl) { nl.textContent = t.name; nl.style.color = t.light; }
+  });
+}
+
+function showDiffScreen() {
+  team1Idx = teamPanels[0].idx;
+  team2Idx = teamPanels[1].idx;
+  if (team1Idx === team2Idx) { alert('Teams must be different!'); return; }
+  showScreen('diffScreen');
+}
+
+function selectOpt(btn) {
+  document.querySelectorAll(`[data-group="${btn.dataset.group}"]`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (btn.dataset.group === 'diff') difficulty = btn.dataset.val;
+  if (btn.dataset.group === 'mode') targetWins = Math.ceil(parseInt(btn.dataset.val) / 2);
+  if (btn.dataset.group === 'flags') numFlags = parseInt(btn.dataset.val);
+  if (btn.dataset.group === 'ppt')   playersPerTeam = parseInt(btn.dataset.val);
+}
+
+// =========================================================
+// START GAME
+// =========================================================
+function startGame() {
+  score1 = 0; score2 = 0;
+  hideAllScreens();
+  canvas.style.display = 'block';
+  resizeCanvas();
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('controlsHint').textContent = gameMode === 1
+    ? 'WASD: Move  |  F: Tag/Unfreeze  |  C: Switch Player  |  ESC: Pause'
+    : 'P1: WASD  F: Tag  C: Switch  |  P2: IJKL  ;: Tag  .: Switch  |  ESC: Pause';
+  gameState = 'playing';
+  paused = false;
+  roundOver = false;
+  initRound();
+  document.onkeydown = e => {
+    keys[e.key] = true;
+    keys[e.key.toLowerCase()] = true;
+    if (gameState === 'playing' && !roundOver) handleKeyDown(e);
+  };
+}
+
+function resizeCanvas() {
+  const s = Math.min((window.innerWidth - 40) / FIELD_W, (window.innerHeight - 80) / FIELD_H);
+  canvas.width = FIELD_W; canvas.height = FIELD_H;
+  canvas.style.width = (FIELD_W * s) + 'px';
+  canvas.style.height = (FIELD_H * s) + 'px';
+}
+window.addEventListener('resize', resizeCanvas);
+
+// =========================================================
+// ROUND INIT
+// =========================================================
+function getFlagYSlots() {
+  if (numFlags === 1) return [0.5];
+  if (numFlags === 3) return [0.2, 0.5, 0.8];
+  // 2 flags: random pair
+  const opts = [[0.2, 0.5], [0.2, 0.8], [0.5, 0.8]];
+  return opts[Math.floor(Math.random() * 3)];
+}
+
+function initRound() {
+  roundOver = false;
+  players = []; flags = [];
+  flashTimer = 0; flashOn = false;
+
+  const t1 = TEAM_DEFS[team1Idx], t2 = TEAM_DEFS[team2Idx];
+
+  // Build starting positions dynamically for any playersPerTeam count.
+  // Two columns per side: col0 = inside base, col1 = just outside base.
+  // Players are evenly distributed vertically across both columns.
+  function makePositions(team) {
+    const positions = [];
+    const col0x = team === 1 ? BASE_W / 2         : FIELD_W - BASE_W / 2;
+    const col1x = team === 1 ? BASE_W + 70         : FIELD_W - BASE_W - 70;
+    const half  = Math.ceil(playersPerTeam / 2);   // players in col0
+    const rest  = playersPerTeam - half;            // players in col1
+    for (let i = 0; i < half; i++) {
+      const yFrac = (i + 1) / (half + 1);
+      positions.push({ x: col0x, y: FIELD_H * yFrac });
+    }
+    for (let i = 0; i < rest; i++) {
+      const yFrac = (i + 1) / (rest + 1);
+      positions.push({ x: col1x, y: FIELD_H * yFrac });
+    }
+    return positions;
+  }
+
+  const t1pos = makePositions(1);
+  const t2pos = makePositions(2);
+
+  for (let i = 0; i < playersPerTeam; i++) {
+    players.push(mkPlayer(i,                  t1, t1pos[i], 1));
+    players.push(mkPlayer(i + playersPerTeam, t2, t2pos[i], 2));
+  }
+
+  const slots = getFlagYSlots();
+  slots.forEach(yf => {
+    const x1 = BASE_W / 2, x2 = FIELD_W - BASE_W / 2, y = FIELD_H * yf;
+    flags.push({ team: 1, x: x1, y, homeX: x1, homeY: y, carriedBy: null, dropped: false, captured: false, color: t1.flag, light: t1.light });
+    flags.push({ team: 2, x: x2, y, homeX: x2, homeY: y, carriedBy: null, dropped: false, captured: false, color: t2.flag, light: t2.light });
+  });
+
+  controlled1 = players.find(p => p.team === 1);
+  if (gameMode === 2) controlled2 = players.find(p => p.team === 2);
+
+  updateHUD();
+
+  // Render field + players first frame so they are visible during countdown
+  draw();
+
+  startCountdown(() => {
+    if (animId) cancelAnimationFrame(animId);
+    lastTime = performance.now();
+    loop(lastTime);
+  });
+}
+
+function mkPlayer(id, td, pos, team) {
+  return {
+    id, team,
+    x: pos.x, y: pos.y,
+    vx: 0, vy: 0,
+    shirt: td.shirt, shorts: td.shorts, light: td.light, teamName: td.name,
+    frozen: false,
+    hasFlag: false,
+    aiState: 'idle',
+    aiTarget: null,
+    aiTimer: 0,
+    aiPhase: Math.random() * Math.PI * 2,
+  };
+}
+
+// =========================================================
+// COUNTDOWN  — rAF-based so ESC-pause freezes it
+// =========================================================
+let cdRafId = null;   // rAF handle so we can cancel on goHome
+
+function startCountdown(cb) {
+  const ov = document.getElementById('countdownOverlay');
+  const el = document.getElementById('countdownNum');
+  ov.style.display = 'flex';
+
+  // State
+  let n          = 3;      // current number showing (3,2,1,0=GO)
+  let phaseMs    = 0;      // ms elapsed in current phase
+  const PHASE    = 1000;   // ms per number
+  const FADE_AT  = 60;     // ms into phase before fade starts
+  let lastTs     = null;
+  let fading     = false;
+
+  function showNumber() {
+    el.textContent = n > 0 ? String(n) : 'GO!';
+    el.style.transition = 'none';
+    el.style.opacity    = '1';
+    el.style.transform  = 'scale(1.1)';
+    void el.offsetWidth;
+    fading = false;
+  }
+
+  showNumber();
+
+  function frame(ts) {
+    // If paused, just reschedule without advancing time
+    if (paused) { cdRafId = requestAnimationFrame(frame); return; }
+
+    if (lastTs === null) lastTs = ts;
+    const dt = Math.min(ts - lastTs, 50);
+    lastTs = ts;
+    phaseMs += dt;
+
+    // Trigger fade after FADE_AT ms
+    if (!fading && phaseMs >= FADE_AT) {
+      fading = true;
+      el.style.transition = 'all 0.75s ease-out';
+      el.style.opacity    = '0';
+      el.style.transform  = 'scale(0.35)';
+    }
+
+    if (phaseMs >= PHASE) {
+      phaseMs -= PHASE;
+      if (n > 0) {
+        n--;
+        showNumber();
+        cdRafId = requestAnimationFrame(frame);
+      } else {
+        // "GO!" just finished its phase — start game
+        ov.style.display = 'none';
+        cdRafId = null;
+        cb();
+      }
+      return;
+    }
+
+    cdRafId = requestAnimationFrame(frame);
+  }
+
+  if (cdRafId) cancelAnimationFrame(cdRafId);
+  cdRafId = requestAnimationFrame(frame);
+}
+
+// =========================================================
+// MAIN LOOP
+// =========================================================
+function loop(ts) {
+  if (paused || roundOver) return;
+  const dt = Math.min(ts - lastTime, 50);
+  lastTime = ts;
+  update(dt);
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+// =========================================================
+// INPUT
+// =========================================================
+function handleKeyDown(e) {
+  const k = e.key.toLowerCase();
+  // Escape is handled at the top-level keydown listener above
+  if (k === 'c') switchPlayer(1);
+  if (k === '.') switchPlayer(2);
+  if (k === 'f') doTag(controlled1, 1);
+  if (k === ';') doTag(controlled2, 2);
+  if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+}
+
+// Tag / unfreeze — NOT flag pickup (that's auto on contact)
+function doTag(player, pnum) {
+  if (!player || player.frozen) return;
+  const enemyTeam = player.team === 1 ? 2 : 1;
+
+  // Priority 1: unfreeze nearby teammate
+  const frozenMates = players.filter(p => p.team === player.team && p.frozen);
+  for (const m of frozenMates) {
+    if (dist(player, m) < TAG_RANGE) { m.frozen = false; return; }
+  }
+
+  // Priority 2: tag nearby enemy that has crossed INTO tagger's half
+  // An enemy is taggable only if they have crossed the centre line into the tagger's own half
+  const enemies = players.filter(p => p.team === enemyTeam && !p.frozen);
+  for (const en of enemies) {
+    const crossedLine = player.team === 1 ? en.x < CENTRE_X : en.x > CENTRE_X;
+    if (crossedLine && dist(player, en) < TAG_RANGE) { freezePlayer(en); return; }
+  }
+}
+
+function switchPlayer(pnum) {
+  const team = pnum === 1 ? 1 : 2;
+  const cur = pnum === 1 ? controlled1 : controlled2;
+  const mates = players.filter(p => p.team === team && p !== cur && !p.frozen);
+  if (!mates.length) return;
+  const best = mates.reduce((a, b) => dist(a, cur) < dist(b, cur) ? a : b);
+  if (pnum === 1) controlled1 = best;
+  else controlled2 = best;
+}
+
+// =========================================================
+// UPDATE
+// =========================================================
+function update(dt) {
+  flashTimer += dt;
+  if (flashTimer > 480) { flashTimer = 0; flashOn = !flashOn; }
+  if (switchRingTimer > 0) { switchRingTimer = Math.max(0, switchRingTimer - dt); }
+
+  // P1 movement
+  if (controlled1 && !controlled1.frozen) {
+    const dx = (keys['d'] || keys['D'] ? 1 : 0) - (keys['a'] || keys['A'] ? 1 : 0);
+    const dy = (keys['s'] || keys['S'] ? 1 : 0) - (keys['w'] || keys['W'] ? 1 : 0);
+    moveHuman(controlled1, dx, dy, dt);
+  }
+
+  // P2 movement
+  if (gameMode === 2 && controlled2 && !controlled2.frozen) {
+    const dx = (keys['l'] || keys['L'] ? 1 : 0) - (keys['j'] || keys['J'] ? 1 : 0);
+    const dy = (keys['k'] || keys['K'] ? 1 : 0) - (keys['i'] || keys['I'] ? 1 : 0);
+    moveHuman(controlled2, dx, dy, dt);
+  }
+
+  // AI
+  for (const p of players) {
+    const isHuman = p === controlled1 || (gameMode === 2 && p === controlled2);
+    if (!isHuman) updateAI(p, dt);
+  }
+
+  // Clamp
+  for (const p of players) {
+    p.x = Math.max(PR, Math.min(FIELD_W - PR, p.x));
+    p.y = Math.max(PR, Math.min(FIELD_H - PR, p.y));
+  }
+
+  // Flags follow carriers
+  for (const fl of flags) {
+    if (fl.carriedBy) { fl.x = fl.carriedBy.x; fl.y = fl.carriedBy.y - PR - 8; }
+  }
+
+  // Auto flag pickup on contact
+  autoPickupFlags();
+
+  // Check captures + win conditions
+  checkRound();
+}
+
+function moveHuman(p, dx, dy, dt) {
+  const spd = BASE_SPEED * (dt / 16);
+  const len = Math.hypot(dx, dy) || 0;
+  if (len > 0) { p.x += (dx / len) * spd; p.y += (dy / len) * spd; p.vx = dx / len; p.vy = dy / len; }
+  else { p.vx = 0; p.vy = 0; }
+}
+
+function freezePlayer(target) {
+  if (target.frozen) return;
+  target.frozen = true;
+  if (target.hasFlag) {
+    const fl = flags.find(f => f.carriedBy === target);
+    if (fl) { fl.carriedBy = null; fl.dropped = true; fl.x = target.x; fl.y = target.y; }
+    target.hasFlag = false;
+  }
+}
+
+function autoPickupFlags() {
+  for (const p of players) {
+    if (p.frozen || p.hasFlag) continue;
+    for (const fl of flags) {
+      if (fl.team === p.team) continue;
+      if (fl.carriedBy || fl.captured) continue;
+      // Can pick up if: flag is dropped anywhere, OR player is in the enemy's base
+      if (dist(p, fl) < PICK_RANGE && (fl.dropped || inEnemyBase(p))) {
+        fl.carriedBy = p;
+        fl.dropped = false;
+        p.hasFlag = true;
+        // Auto-switch: if an AI teammate captures the flag, hand control to them —
+        // but only if the current controlled player is NOT already holding a flag.
+        if (p.team === 1 && p !== controlled1 && !controlled1.hasFlag) {
+          controlled1 = p;
+          showSwitchToast(p);
+        } else if (gameMode === 2 && p.team === 2 && p !== controlled2 && !controlled2.hasFlag) {
+          controlled2 = p;
+          showSwitchToast(p);
+        }
+        break;
+      }
+    }
+  }
+}
+
+// =========================================================
+// ROUND / SCORE
+// =========================================================
+function checkRound() {
+  // Score any carried flags in own base
+  for (const fl of flags) {
+    if (!fl.carriedBy || fl.captured) continue;
+    const carrier = fl.carriedBy;
+    if (fl.team !== carrier.team && inOwnBase(carrier)) {
+      fl.captured = true;
+      fl.carriedBy = null;
+      carrier.hasFlag = false;
+      fl.x = -999; fl.y = -999; // off-screen
+      updateHUD();
+    }
+  }
+
+  if (roundOver) return;
+
+  // Win conditions
+  const myFlagsCaptured = flags.filter(f => f.team === 2 && f.captured).length; // team1 took team2's
+  const theirFlagsCaptured = flags.filter(f => f.team === 1 && f.captured).length;
+  const t1allFlagsTaken = myFlagsCaptured >= numFlags;
+  const t2allFlagsTaken = theirFlagsCaptured >= numFlags;
+
+  const t1alive = players.filter(p => p.team === 1 && !p.frozen).length;
+  const t2alive = players.filter(p => p.team === 2 && !p.frozen).length;
+  const t1allFrozen = t1alive === 0;
+  const t2allFrozen = t2alive === 0;
+
+  let winner = 0, reason = '';
+
+  // Flag win: must capture ALL enemy flags to win the round
+  if (t1allFlagsTaken && !t2allFlagsTaken)     { winner = 1; reason = 'ALL FLAGS CAPTURED'; }
+  else if (t2allFlagsTaken && !t1allFlagsTaken) { winner = 2; reason = 'ALL FLAGS CAPTURED'; }
+  else if (t1allFlagsTaken && t2allFlagsTaken)  { winner = 1; reason = 'ALL FLAGS CAPTURED'; } // simultaneous: team1 wins tie
+
+  // Freeze win: only if ALL 4 players on a team are frozen simultaneously (none left to unfreeze)
+  if (!winner && t2allFrozen && !t1allFrozen)   { winner = 1; reason = 'ALL OPPONENTS FROZEN'; }
+  else if (!winner && t1allFrozen && !t2allFrozen) { winner = 2; reason = 'ALL OPPONENTS FROZEN'; }
+  else if (!winner && t1allFrozen && t2allFrozen)  { winner = 1; reason = 'MUTUAL FREEZE'; }
+
+  if (winner) {
+    roundOver = true;
+    if (winner === 1) score1++; else score2++;
+    updateHUD();
+
+    const t = TEAM_DEFS[winner === 1 ? team1Idx : team2Idx];
+    showBanner(`${t.name.toUpperCase()} WINS — ${reason}`, t.light);
+
+    setTimeout(() => {
+      if (score1 >= targetWins || score2 >= targetWins) endMatch(winner, reason);
+      else initRound();
+    }, 2800);
+  }
+}
+
+// Shows a brief bottom toast + rings the newly-controlled player on canvas
+let switchRingPlayer = null;
+let switchRingTimer  = 0;      // ms remaining for ring pulse
+const RING_DURATION  = 1400;   // ms — longer, multi-pulse
+
+function showSwitchToast(player) {
+  const t = player.team === 1 ? TEAM_DEFS[team1Idx] : TEAM_DEFS[team2Idx];
+
+  // ── Screen edge flash ─────────────────────────────────────────────────
+  const flash = document.getElementById('switchFlash');
+  flash.style.background = `radial-gradient(ellipse at center, transparent 40%, ${t.light}55 100%)`;
+  flash.classList.remove('show');
+  void flash.offsetWidth;
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 180);
+
+  // ── Canvas ring pulses ────────────────────────────────────────────────
+  switchRingPlayer = player;
+  switchRingTimer  = RING_DURATION;
+}
+
+function showBanner(text, color) {
+  const b = document.getElementById('goalBanner');
+  b.textContent = text;
+  b.style.color = color || '#fff';
+  b.style.transition = 'none';
+  b.style.opacity = '1';
+  b.style.transform = 'translate(-50%,-50%) scale(1)';
+  void b.offsetWidth;
+  setTimeout(() => {
+    b.style.transition = 'all 1.2s ease-out';
+    b.style.opacity = '0';
+    b.style.transform = 'translate(-50%,-62%) scale(1.12)';
+  }, 1800);
+}
+
+function updateHUD() {
+  const t1 = TEAM_DEFS[team1Idx], t2 = TEAM_DEFS[team2Idx];
+  document.getElementById('scoreDisplay').innerHTML =
+    `<span style="color:${t1.light}">${score1}</span> <span style="color:#fff">–</span> <span style="color:${t2.light}">${score2}</span>`;
+  document.getElementById('roundDisplay').textContent = `BEST OF ${targetWins * 2 - 1}`;
+  if (numFlags > 1) {
+    const c1 = flags.filter(f => f.team === 2 && f.captured).length;
+    const c2 = flags.filter(f => f.team === 1 && f.captured).length;
+    document.getElementById('flagCountDisplay').textContent = `🚩 ${c1}/${numFlags}  vs  🚩 ${c2}/${numFlags}`;
+  } else {
+    document.getElementById('flagCountDisplay').textContent = '';
+  }
+}
+
+function endMatch(winner, reason) {
+  const t1 = TEAM_DEFS[team1Idx], t2 = TEAM_DEFS[team2Idx];
+  const isDraw = score1 === score2;
+  const wt = winner === 1 ? t1 : t2;
+  document.getElementById('gameOverReason').textContent = reason || '';
+  if (isDraw) {
+    document.getElementById('gameOverWinner').textContent = 'DRAW!';
+    document.getElementById('gameOverWinner').style.color = '#fff';
+  } else {
+    document.getElementById('gameOverWinner').textContent = wt.name.toUpperCase() + ' WINS!';
+    document.getElementById('gameOverWinner').style.color = wt.light;
+  }
+  document.getElementById('gameOverScore').textContent = `${score1} – ${score2}`;
+  showScreen('gameOverScreen');
+  gameState = 'gameover';
+}
+
+// =========================================================
+// HELPERS
+// =========================================================
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+function inOwnBase(p)   { return p.team === 1 ? p.x < BASE_W     : p.x > FIELD_W - BASE_W; }
+function inEnemyBase(p) { return p.team === 1 ? p.x > FIELD_W - BASE_W : p.x < BASE_W; }
+
+// =========================================================
+// AI
+// =========================================================
+function getDiff(isOpponent) {
+  // tagProb: chance per frame an AI actually executes a tag touch (kept very low)
+  // roleSplit: fraction of AIs that choose 'tag' role vs attack/defend
+  // tagDepth: how far into enemy half an AI will chase to tag (fraction of half-width)
+  const base = {
+    amateur:      { speed: 0.70, range: 80,  aggression: 0.30, tagProb: 0.006, roleSplit: 0.20, tagDepth: 0.30, tagCooldown: 2200 },
+    intermediate: { speed: 0.88, range: 130, aggression: 0.50, tagProb: 0.010, roleSplit: 0.25, tagDepth: 0.55, tagCooldown: 1600 },
+    professional: { speed: 1.04, range: 200, aggression: 0.70, tagProb: 0.016, roleSplit: 0.30, tagDepth: 0.80, tagCooldown: 1000 },
+  }[difficulty];
+  if (!isOpponent) return base;
+  // Opponents get a modest bump in speed and awareness only — not tagging aggression
+  return {
+    ...base,
+    speed: base.speed * 1.12,
+    range: base.range * 1.15,
+  };
+}
+
+function updateAI(p, dt) {
+  if (p.frozen) return;
+  const isOpponent = (gameMode === 1 && p.team === 2);
+  const d = getDiff(isOpponent);
+  const spd = BASE_SPEED * d.speed * (dt / 16);
+  const enemyTeam = p.team === 1 ? 2 : 1;
+  const aliveEnemies = players.filter(q => q.team === enemyTeam && !q.frozen);
+  const frozenMates  = players.filter(q => q.team === p.team && q.frozen);
+  const enemyFlags   = flags.filter(f => f.team === enemyTeam && !f.captured && !f.carriedBy);
+
+  p.aiTimer -= dt;
+  if (p.aiTagCooldown === undefined) p.aiTagCooldown = 0;
+  if (p.aiTagCooldown > 0) p.aiTagCooldown -= dt;
+
+  // Helper: can this AI legally tag an enemy right now?
+  // Rules: enemy must have crossed the centre line into the AI's own half,
+  //        AI must not be on cooldown, and a random gate limits frequency.
+  function canTag(en) {
+    if (p.aiTagCooldown > 0) return false;
+    if (en.frozen) return false;
+    // Enemy must have crossed into tagger's half
+    const crossedLine = p.team === 1 ? en.x < CENTRE_X : en.x > CENTRE_X;
+    if (!crossedLine) return false;
+    // Enemy must not be safely in their own base
+    if (inOwnBase(en)) return false;
+    if (dist(p, en) > TAG_RANGE) return false;
+    // Probabilistic gate — keeps tagging feeling natural, not instant
+    return Math.random() < d.tagProb;
+  }
+
+  function doAITag(en) {
+    freezePlayer(en);
+    p.aiTagCooldown = d.tagCooldown;
+  }
+
+  // ── PRIORITY 1: Carrying a flag → run straight home ──────────────────────
+  if (p.hasFlag) {
+    const homeX = p.team === 1 ? BASE_W / 2 : FIELD_W - BASE_W / 2;
+    // Aim for the Y midpoint of the base so pathing is direct
+    moveTo(p, homeX, FIELD_H / 2, spd);
+    // While running, opportunistically tag only enemies right on top of them
+    for (const en of aliveEnemies) {
+      if (canTag(en)) { doAITag(en); break; }
+    }
+    return;
+  }
+
+  // ── PRIORITY 2: Rescue a frozen teammate ─────────────────────────────────
+  if (frozenMates.length && p.aiTimer < 0 && Math.random() < 0.40 * d.aggression) {
+    const closest = frozenMates.reduce((a, b) => dist(p, a) < dist(p, b) ? a : b);
+    p.aiState = 'rescue';
+    p.aiTarget = closest;
+    p.aiTimer = 700 + Math.random() * 700;
+  }
+  if (p.aiState === 'rescue' && p.aiTarget) {
+    if (!p.aiTarget.frozen) { p.aiState = 'idle'; p.aiTarget = null; }
+    else {
+      moveTo(p, p.aiTarget.x, p.aiTarget.y, spd);
+      if (dist(p, p.aiTarget) < TAG_RANGE) { p.aiTarget.frozen = false; p.aiState = 'idle'; }
+      return;
+    }
+  }
+
+  // ── ASSIGN ROLE on timer expiry ───────────────────────────────────────────
+  // Majority always attack or defend; only a minority become taggers.
+  // Each player's role is stable for 1.5–3 seconds before re-rolling.
+  if (p.aiTimer < 0) {
+    const r = Math.random();
+    if      (r < d.roleSplit)            p.aiState = 'tag';     // minority
+    else if (r < d.roleSplit + 0.50)     p.aiState = 'attack';  // largest group
+    else                                 p.aiState = 'defend';
+    p.aiTimer = 1500 + Math.random() * 1500;
+  }
+
+  // ── EXECUTE ROLE ──────────────────────────────────────────────────────────
+
+  if (p.aiState === 'attack') {
+    // Head for the nearest uncaptured, uncarried enemy flag
+    const target = enemyFlags.slice().sort((a, b) => dist(p, a) - dist(p, b))[0];
+    if (target) {
+      moveTo(p, target.x, target.y, spd);
+    } else {
+      // All enemy flags are being carried — support by defending or patrolling
+      p.aiState = 'defend';
+    }
+    // Passive tag: only if an enemy literally bumps into us while we're running
+    for (const en of aliveEnemies) {
+      if (canTag(en)) { doAITag(en); break; }
+    }
+  }
+
+  else if (p.aiState === 'tag') {
+    // Only hunt enemies who have genuinely crossed into our half.
+    // Respect tagDepth: don't chase enemies too far into their own territory.
+    const halfW = CENTRE_X; // 450px
+    const maxChaseX = p.team === 1
+      ? CENTRE_X - halfW * d.tagDepth   // team1 chases leftward limit
+      : CENTRE_X + halfW * d.tagDepth;  // team2 chases rightward limit
+
+    const targets = aliveEnemies.filter(e => {
+      if (inOwnBase(e)) return false;
+      // Must have crossed centre into our half
+      return p.team === 1 ? e.x < CENTRE_X : e.x > CENTRE_X;
+    });
+
+    if (targets.length) {
+      // Prefer the flag carrier, then the nearest
+      const flagCarrier = targets.find(e => e.hasFlag);
+      const nearest = (flagCarrier || targets.reduce((a, b) => dist(p, a) < dist(p, b) ? a : b));
+      // Only chase within tagDepth; otherwise patrol midfield
+      const withinDepth = p.team === 1 ? nearest.x > maxChaseX : nearest.x < maxChaseX;
+      if (dist(p, nearest) < d.range && withinDepth) {
+        moveTo(p, nearest.x, nearest.y, spd);
+        if (canTag(nearest)) doAITag(nearest);
+      } else {
+        patrolMid(p, spd);
+      }
+    } else {
+      // Nobody in our half to chase — switch to attack so we stay useful
+      p.aiState = 'attack';
+      p.aiTimer = 400;
+    }
+  }
+
+  else { // defend
+    // Protect our own base. Chase enemies who have entered our half or base.
+    // Only tag if they are clearly in our half.
+    const intruders = aliveEnemies.filter(e =>
+      p.team === 1 ? e.x < CENTRE_X : e.x > CENTRE_X
+    );
+    if (intruders.length) {
+      const nearest = intruders.reduce((a, b) => dist(p, a) < dist(p, b) ? a : b);
+      moveTo(p, nearest.x, nearest.y, spd);
+      if (canTag(nearest)) doAITag(nearest);
+    } else {
+      // Patrol near our own base, guarding the flag positions
+      const gx = p.team === 1 ? BASE_W * 0.75 : FIELD_W - BASE_W * 0.75;
+      const gy = FIELD_H / 2 + Math.sin(Date.now() / 1400 + p.aiPhase) * FIELD_H * 0.30;
+      moveTo(p, gx, gy, spd * 0.75);
+    }
+  }
+}
+
+function moveTo(p, tx, ty, spd) {
+  const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
+  if (d < 2) return;
+  p.x += (dx / d) * spd; p.y += (dy / d) * spd;
+  p.vx = dx / d; p.vy = dy / d;
+  p.x = Math.max(PR, Math.min(FIELD_W - PR, p.x));
+  p.y = Math.max(PR, Math.min(FIELD_H - PR, p.y));
+}
+
+function patrolMid(p, spd) {
+  const mx = p.team === 1 ? CENTRE_X - 55 : CENTRE_X + 55;
+  const my = FIELD_H / 2 + Math.sin(Date.now() / 1000 + p.aiPhase) * FIELD_H * 0.28;
+  moveTo(p, mx, my, spd * 0.78);
+}
+
+// =========================================================
+// DRAW
+// =========================================================
+function draw() {
+  ctx.clearRect(0, 0, FIELD_W, FIELD_H);
+  drawField();
+  drawBaseFlash();
+  drawFlags();
+  drawPlayers();
+}
+
+function drawField() {
+  // Grass
+  const g = ctx.createLinearGradient(0, 0, FIELD_W, FIELD_H);
+  g.addColorStop(0, '#2d7a2d'); g.addColorStop(0.5, '#34aa34'); g.addColorStop(1, '#2d7a2d');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, FIELD_W, FIELD_H);
+  // Stripes
+  for (let i = 0; i < FIELD_W; i += 60) {
+    ctx.fillStyle = i % 120 === 0 ? '#00000015' : '#ffffff09';
+    ctx.fillRect(i, 0, 60, FIELD_H);
+  }
+  // Outer border
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+  ctx.strokeRect(4, 4, FIELD_W - 8, FIELD_H - 8);
+  // Centre line
+  ctx.setLineDash([12, 8]); ctx.strokeStyle = '#ffffffbb'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(CENTRE_X, 4); ctx.lineTo(CENTRE_X, FIELD_H - 4); ctx.stroke();
+  ctx.setLineDash([]);
+  // Bases
+  const t1 = TEAM_DEFS[team1Idx], t2 = TEAM_DEFS[team2Idx];
+  drawBase(4, 4, BASE_W - 4, FIELD_H - 8, t1);
+  drawBase(FIELD_W - BASE_W, 4, BASE_W - 4, FIELD_H - 8, t2);
+}
+
+function drawBase(x, y, w, h, t) {
+  ctx.fillStyle = t.shirt + '1e'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = t.light + '99'; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h);
+  ctx.font = 'bold 12px Barlow,sans-serif';
+  ctx.fillStyle = t.light + 'aa'; ctx.textAlign = 'center';
+  ctx.fillText('BASE', x + w / 2, y + 16);
+  ctx.textAlign = 'left';
+}
+
+function drawBaseFlash() {
+  if (!flashOn) return;
+  for (const p of players) {
+    if (!p.hasFlag) continue;
+    const fl = flags.find(f => f.carriedBy === p);
+    if (!fl || fl.team === p.team) continue;
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = '#00ff44';
+    if (p.team === 1) ctx.fillRect(4, 4, BASE_W - 4, FIELD_H - 8);
+    else ctx.fillRect(FIELD_W - BASE_W, 4, BASE_W - 4, FIELD_H - 8);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#00ff44'; ctx.lineWidth = 3;
+    if (p.team === 1) ctx.strokeRect(4, 4, BASE_W - 4, FIELD_H - 8);
+    else ctx.strokeRect(FIELD_W - BASE_W, 4, BASE_W - 4, FIELD_H - 8);
+    ctx.restore();
+  }
+}
+
+function drawFlags() {
+  for (const fl of flags) {
+    if (fl.captured || fl.carriedBy) continue;
+    const alpha = fl.dropped ? (flashOn ? 1 : 0.4) : 1;
+    drawFlagAt(fl.x, fl.y, fl.color, alpha);
+  }
+}
+
+function drawFlagAt(x, y, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha ?? 1;
+  ctx.strokeStyle = '#999'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y + FLAG_R); ctx.lineTo(x, y - FLAG_R * 2.3); ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - FLAG_R * 2.3);
+  ctx.lineTo(x + FLAG_R * 1.7, y - FLAG_R * 1.4);
+  ctx.lineTo(x, y - FLAG_R * 0.3);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawPlayers() {
+  for (const p of players) drawPlayer(p, p === controlled1, gameMode === 2 && p === controlled2);
+}
+
+function drawPlayer(p, isC1, isC2) {
+  const x = p.x, y = p.y;
+  ctx.save();
+
+  // Shadow
+  ctx.fillStyle = '#00000030';
+  ctx.beginPath(); ctx.ellipse(x, y + PR * 0.88, PR * 0.85, PR * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Frozen aura
+  if (p.frozen && flashOn) {
+    ctx.fillStyle = '#88aaff40';
+    ctx.beginPath(); ctx.arc(x, y, PR * 1.4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Shirt (torso)
+  ctx.fillStyle = p.shirt;
+  ctx.beginPath(); ctx.ellipse(x, y, PR * 0.72, PR * 0.82, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Shorts
+  ctx.fillStyle = p.shorts;
+  ctx.beginPath(); ctx.ellipse(x, y + PR * 0.43, PR * 0.66, PR * 0.52, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Legs
+  ctx.fillStyle = p.shorts;
+  ctx.fillRect(x - PR * 0.36, y + PR * 0.61, PR * 0.32, PR * 0.62);
+  ctx.fillRect(x + PR * 0.04, y + PR * 0.61, PR * 0.32, PR * 0.62);
+
+  // Socks
+  ctx.fillStyle = '#eee';
+  ctx.fillRect(x - PR * 0.36, y + PR * 0.96, PR * 0.32, PR * 0.22);
+  ctx.fillRect(x + PR * 0.04, y + PR * 0.96, PR * 0.32, PR * 0.22);
+
+  // Boots
+  ctx.fillStyle = '#222';
+  ctx.fillRect(x - PR * 0.41, y + PR * 1.11, PR * 0.41, PR * 0.18);
+  ctx.fillRect(x + PR * 0.00, y + PR * 1.11, PR * 0.41, PR * 0.18);
+
+  // Head
+  ctx.fillStyle = '#f5cba7';
+  ctx.beginPath(); ctx.arc(x, y - PR * 0.76, PR * 0.52, 0, Math.PI * 2); ctx.fill();
+
+  // Hair
+  ctx.fillStyle = '#5d3a1a';
+  ctx.beginPath(); ctx.arc(x, y - PR * 0.90, PR * 0.47, Math.PI, Math.PI * 2); ctx.fill();
+
+  // Arms
+  ctx.strokeStyle = p.shirt; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x - PR * 0.65, y - PR * 0.1); ctx.lineTo(x - PR, y + PR * 0.38); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + PR * 0.65, y - PR * 0.1); ctx.lineTo(x + PR, y + PR * 0.38); ctx.stroke();
+
+  // Carried flag
+  if (p.hasFlag) {
+    const fl = flags.find(f => f.carriedBy === p);
+    if (fl) drawFlagAt(x + PR * 0.95, y - PR * 0.65, fl.color, 1);
+  }
+
+  // Frozen icon
+  if (p.frozen) {
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('❄', x, y - PR * 2.3);
+  }
+
+  // Controlled indicator (triangle)
+  if (isC1 || isC2) {
+    ctx.fillStyle = isC1 ? '#ffffff' : '#ffff00';
+    ctx.beginPath();
+    ctx.moveTo(x, y - PR * 2.75);
+    ctx.lineTo(x - 7, y - PR * 2.05);
+    ctx.lineTo(x + 7, y - PR * 2.05);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Switch indicator: prominent multi-ring pulse when control switches to this player
+  if (p === switchRingPlayer && switchRingTimer > 0) {
+    const elapsed  = RING_DURATION - switchRingTimer;          // 0 → RING_DURATION
+    const teamDef  = p.team === 1 ? TEAM_DEFS[team1Idx] : TEAM_DEFS[team2Idx];
+
+    // Draw 3 staggered expanding rings, offset by 220ms each
+    for (let ri = 0; ri < 3; ri++) {
+      const delay    = ri * 220;
+      const ringAge  = elapsed - delay;           // negative means not started yet
+      if (ringAge < 0) continue;
+      const ringDur  = 700;
+      const prog     = Math.min(ringAge / ringDur, 1); // 0→1
+      const ringR    = PR * 1.8 + prog * PR * 4.5;
+      const alpha    = (1 - prog) * (ri === 0 ? 1.0 : 0.65);
+      const lw       = 3.5 - prog * 2.5;
+      ctx.save();
+      ctx.strokeStyle = teamDef.light;
+      ctx.globalAlpha = Math.max(0, alpha);
+      ctx.lineWidth   = Math.max(0.5, lw);
+      ctx.beginPath(); ctx.arc(x, y, ringR, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
+    // Bright body flash in the first 150ms
+    if (elapsed < 150) {
+      const flashProg = elapsed / 150;
+      ctx.save();
+      ctx.globalAlpha = (1 - flashProg) * 0.7;
+      ctx.fillStyle   = teamDef.light;
+      ctx.beginPath(); ctx.arc(x, y, PR * 1.7, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Persistent bright arrow indicator pointing down at the player
+    const arrowAlpha = Math.min(1, (RING_DURATION - switchRingTimer) / 200) *
+                       Math.min(1, switchRingTimer / 300);  // fade in + fade out
+    if (arrowAlpha > 0) {
+      const bounce = Math.sin(elapsed / 130) * 4;           // gentle bounce
+      ctx.save();
+      ctx.globalAlpha = arrowAlpha;
+      ctx.fillStyle   = teamDef.light;
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth   = 1.5;
+      // Arrow chevron above head
+      const ax = x, ay = y - PR * 3.6 - bounce;
+      ctx.beginPath();
+      ctx.moveTo(ax,      ay);
+      ctx.lineTo(ax - 10, ay - 14);
+      ctx.lineTo(ax + 10, ay - 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+  ctx.textAlign = 'left';
+}
+
+// =========================================================
+// PAUSE / RESUME / RESTART / HOME
+// =========================================================
+function pauseGame() {
+  // Allow pausing during countdown too (gameState is 'playing' from startGame)
+  if ((gameState !== 'playing') || roundOver) return;
+  paused = true; gameState = 'paused';
+  if (animId)  cancelAnimationFrame(animId);
+  showScreen('pauseScreen');
+}
+function resumeGame() {
+  paused = false; gameState = 'playing';
+  hideAllScreens();
+  // Only restart game loop if countdown has already finished (animId path)
+  // Countdown rAF loop checks `paused` itself and will self-resume
+  if (!document.getElementById('countdownOverlay').style.display ||
+      document.getElementById('countdownOverlay').style.display === 'none') {
+    lastTime = performance.now();
+    loop(lastTime);
+  }
+}
+function restartGame() {
+  if (animId) cancelAnimationFrame(animId);
+  score1 = 0; score2 = 0;
+  hideAllScreens();
+  canvas.style.display = 'block';
+  document.getElementById('hud').style.display = 'flex';
+  gameState = 'playing'; paused = false;
+  initRound();
+  document.onkeydown = e => {
+    keys[e.key] = true; keys[e.key.toLowerCase()] = true;
+    if (gameState === 'playing' && !roundOver) handleKeyDown(e);
+  };
+}
+function goHome() {
+  if (animId)   cancelAnimationFrame(animId);
+  if (cdRafId)  { cancelAnimationFrame(cdRafId); cdRafId = null; }
+  canvas.style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('countdownOverlay').style.display = 'none';
+  gameState = 'menu';
+  showScreen('menuScreen');
+}
+
+// =========================================================
+// BOOT
+// =========================================================
+showScreen('menuScreen');
+</script>
+</body>
+</html>
